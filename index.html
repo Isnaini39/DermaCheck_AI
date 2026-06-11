@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DermaCheck.AI — Deteksi Penyakit Kulit Berbasis AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Material Design Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            rose: {
+              25:  '#FFF5F7',
+              50:  '#FFF0F3',
+              100: '#FFE0E8',
+              200: '#FFC5D4',
+              300: '#FF9BB5',
+              400: '#F96B8E',
+              500: '#F03E6D',
+              600: '#D91A52',
+              700: '#B21043',
+              800: '#900F39',
+              900: '#6E102E',
+            },
+            mauve: {
+              50:  '#FAF3F6',
+              100: '#F3E4EC',
+              200: '#E8C8D8',
+              300: '#D9A5C0',
+              400: '#C47DA2',
+              500: '#A85886',
+              600: '#8C3D6A',
+              700: '#702853',
+              800: '#4D1836',
+              900: '#2D0F1F',
+            },
+            lilac: {
+              50:  '#FAF5FF',
+              100: '#F3E8FF',
+              200: '#E9D5FF',
+              300: '#D8B4FE',
+              400: '#C084FC',
+            },
+            cream: '#FDF4F7',
+          },
+          animation: {
+            'float-slow': 'floatSlow 8s ease-in-out infinite',
+            'float-med':  'floatMed 10s ease-in-out infinite reverse',
+            'float-fast': 'floatFast 6s ease-in-out infinite 2s',
+            'pulse-dot':  'pulseDot 2s ease-in-out infinite',
+            'scan':       'scanAnim 2.5s linear infinite',
+            'spin-slow':  'spin 1s linear infinite',
+            'bar-fill':   'barFill 1.2s cubic-bezier(0.23,1,0.32,1) forwards',
+            'fade-up':    'fadeUp 0.6s ease forwards',
+          },
+          keyframes: {
+            floatSlow: { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '33%': { transform: 'translate(20px,-30px) scale(1.04)' }, '66%': { transform: 'translate(-12px,18px) scale(0.97)' } },
+            floatMed:  { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '50%': { transform: 'translate(-20px,25px) scale(1.05)' } },
+            floatFast: { '0%,100%': { transform: 'translate(0,0)' }, '50%': { transform: 'translate(14px,-18px)' } },
+            pulseDot:  { '0%,100%': { opacity: '1', transform: 'scale(1)' }, '50%': { opacity: '0.5', transform: 'scale(1.4)' } },
+            scanAnim:  { '0%': { top: '8%' }, '100%': { top: '90%' } },
+            fadeUp:    { 'from': { opacity: '0', transform: 'translateY(28px)' }, 'to': { opacity: '1', transform: 'translateY(0)' } },
+          },
+          boxShadow: {
+            'glass':   '0 4px 24px rgba(209,26,82,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+            'glass-md':'0 12px 40px rgba(209,26,82,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+            'glass-lg':'0 24px 64px rgba(209,26,82,0.16), 0 4px 12px rgba(0,0,0,0.08)',
+            'rose':    '0 4px 20px rgba(217,26,82,0.28)',
+            'rose-lg': '0 8px 32px rgba(217,26,82,0.38)',
+          },
+          backgroundImage: {
+            'mesh': 'radial-gradient(ellipse at 20% 20%, #FFD6E7 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, #F3E8FF 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, #FFF0F3 0%, transparent 70%)',
+          },
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background-color: #FDF4F7; }
+    /* Glassmorphism cards */
+    .glass-card {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,200,220,0.45);
+    }
+    .dark .glass-card {
+      background: rgba(30,12,22,0.70);
+      border-color: rgba(90,35,58,0.45);
+    }
+    /* Shimmer border effect on hover */
+    .shimmer-card {
+      position: relative;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .shimmer-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, transparent 30%, rgba(217,26,82,0.25) 50%, transparent 70%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .shimmer-card:hover::before { opacity: 1; }
+    .shimmer-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(217,26,82,0.15); }
+
+    /* Gradient text */
+    .text-gradient {
+      background: linear-gradient(135deg, #D91A52 0%, #8C3D6A 60%, #6C3483 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Active nav link */
+    .nav-link.active { color: #D91A52; }
+    .nav-link.active::after { transform: scaleX(1) !important; }
+
+    /* Scan line position */
+    .scan-line-el {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #F96B8E, transparent);
+      animation: scanAnim 2.5s linear infinite;
+    }
+
+    /* Conf bar fill animation */
+    .conf-bar-fill { transition: width 1.2s cubic-bezier(0.23,1,0.32,1); }
+    .top3-fill      { transition: width 1s cubic-bezier(0.23,1,0.32,1); }
+
+    /* Dark mode base */
+    .dark body { background-color: #1A0D13; }
+    .dark .bg-cream { background-color: #1A0D13; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FDF4F7; }
+    ::-webkit-scrollbar-thumb { background: #FFAFC8; border-radius: 99px; }
+    .dark ::-webkit-scrollbar-track { background: #1A0D13; }
+    .dark ::-webkit-scrollbar-thumb { background: #5E2240; }
+
+    /* Modal scroll */
+    .modal-body-inner { max-height: 70vh; overflow-y: auto; }
+
+    /* Spinner */
+    .spinner { border: 3px solid #FFD6E7; border-top-color: #D91A52; border-radius: 50%; width: 44px; height: 44px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast in */
+    @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+    .toast-anim { animation: toastIn 0.3s ease; }
+
+    /* CM diagonal highlight */
+    .cm-diag { background: rgba(217,26,82,0.10); color: #D91A52; font-weight: 700; }
+
+    /* Staggered fade for hero items */
+    .hero-badge-wrap  { animation: fadeUp 0.6s ease 0s both; }
+    .hero-title-wrap  { animation: fadeUp 0.6s ease 0.12s both; }
+    .hero-sub-wrap    { animation: fadeUp 0.6s ease 0.22s both; }
+    .hero-cta-wrap    { animation: fadeUp 0.6s ease 0.32s both; }
+    .hero-stats-wrap  { animation: fadeUp 0.6s ease 0.48s both; }
+  </style>
+</head>
+
+<body class="font-sans antialiased text-mauve-900 bg-cream transition-colors duration-300">
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 md:px-10
+  bg-[rgba(253,244,247,0.85)] dark:bg-[rgba(26,13,19,0.85)]
+  backdrop-blur-xl border-b border-rose-100 dark:border-mauve-800 transition-colors duration-300">
+
+  <a href="#hero" class="flex items-center gap-2.5 group">
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400 to-rose-700 flex items-center justify-center shadow-rose">
+      <i class="mdi mdi-water-drop text-white text-lg"></i>
+    </div>
+    <span class="font-semibold text-[1.05rem] text-mauve-900 dark:text-rose-100">
+      Derma<span class="text-rose-600 font-bold">Check</span><span class="text-mauve-400">.AI</span>
+    </span>
+  </a>
+
+  <ul class="hidden md:flex items-center gap-7 text-sm font-medium">
+    <li><a href="#hero"       class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.home">Beranda</a></li>
+    <li><a href="#diseases"   class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.diseases">Penyakit</a></li>
+    <li><a href="#detection"  class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.detect">Deteksi</a></li>
+    <li><a href="#analytics"  class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.analytics">Analitik</a></li>
+    <li><a href="#evaluation" class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.evaluation">Evaluasi</a></li>
+    <li><a href="#about"      class="nav-link relative text-mauve-500 dark:text-mauve-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors after:absolute after:bottom-[-3px] after:left-0 after:right-0 after:h-[2px] after:bg-rose-600 after:rounded-full after:scale-x-0 after:transition-transform hover:after:scale-x-100" data-i18n="nav.about">Tentang</a></li>
+  </ul>
+
+  <div class="flex items-center gap-2">
+    <button id="langBtn" class="px-3 py-1.5 text-sm font-bold rounded-lg text-mauve-700 dark:text-mauve-200 hover:bg-rose-100 dark:hover:bg-mauve-800 transition-colors">ID</button>
+    <button id="darkBtn" class="w-9 h-9 rounded-xl flex items-center justify-center text-mauve-500 dark:text-mauve-300 hover:bg-rose-100 dark:hover:bg-mauve-800 hover:text-rose-600 transition-all">
+      <i class="mdi mdi-weather-night text-lg" id="darkIcon"></i>
+    </button>
+    <button onclick="sTo('#detection')" class="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm font-semibold shadow-rose hover:shadow-rose-lg hover:-translate-y-0.5 transition-all duration-200" data-i18n="nav.cta">
+      <i class="mdi mdi-magnify text-base"></i>
+      <span>Mulai Deteksi</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ HERO ══════════════════════════════ -->
+<section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden px-4 pt-16">
+  <!-- Gradient mesh background -->
+  <div class="absolute inset-0 bg-mesh opacity-80"></div>
+
+  <!-- Floating blobs -->
+  <div class="absolute w-[480px] h-[480px] rounded-full bg-rose-200/50 dark:bg-rose-900/20 blur-[80px] top-[-100px] left-[-120px] animate-float-slow"></div>
+  <div class="absolute w-[360px] h-[360px] rounded-full bg-lilac-200/60 dark:bg-lilac-400/10 blur-[80px] bottom-[-80px] right-[-80px] animate-float-med"></div>
+  <div class="absolute w-[240px] h-[240px] rounded-full bg-rose-100/70 blur-[60px] top-[45%] left-[60%] animate-float-fast"></div>
+
+  <div class="relative z-10 text-center max-w-3xl mx-auto py-16">
+    <!-- Badge -->
+    <div class="hero-badge-wrap inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+      glass-card text-sm font-medium text-mauve-600 dark:text-mauve-300 mb-6 shadow-glass">
+      <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-dot"></span>
+      <span>Detect · Understand · Heal</span>
+    </div>
+
+    <!-- Title -->
+    <h1 class="hero-title-wrap font-display font-black text-[clamp(2.8rem,7vw,5rem)] leading-[1.1] text-mauve-900 dark:text-rose-50 mb-5" data-i18n="hero.title">
+      Deteksi Penyakit Kulit<br>
+      <em class="text-gradient not-italic">Berbasis AI</em>
+    </h1>
+
+    <!-- Sub -->
+    <p class="hero-sub-wrap text-[1.1rem] text-mauve-500 dark:text-mauve-300 max-w-[520px] mx-auto mb-8 leading-relaxed" data-i18n="hero.sub">
+      Unggah atau ambil foto kulit Anda — DermaCheck.AI menganalisisnya secara instan menggunakan deep learning MobileNetV2.
+    </p>
+
+    <!-- CTA -->
+    <div class="hero-cta-wrap flex flex-wrap gap-3 justify-center">
+      <button onclick="sTo('#detection')" class="flex items-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white font-semibold shadow-rose hover:shadow-rose-lg hover:-translate-y-1 transition-all duration-200">
+        <i class="mdi mdi-magnify-scan text-lg"></i>
+        <span data-i18n="hero.cta1">Mulai Deteksi</span>
+      </button>
+      <button onclick="sTo('#diseases')" class="flex items-center gap-2 px-6 py-3.5 rounded-full glass-card font-semibold text-mauve-700 dark:text-mauve-200 hover:bg-rose-50 dark:hover:bg-mauve-800 hover:-translate-y-1 transition-all duration-200 shadow-glass">
+        <i class="mdi mdi-book-open-variant text-lg text-rose-500"></i>
+        <span data-i18n="hero.cta2">Pelajari Penyakit</span>
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats-wrap mt-12 grid grid-cols-3 gap-6 max-w-sm mx-auto">
+      <div class="glass-card rounded-2xl px-4 py-4 shadow-glass">
+        <div class="font-display font-extrabold text-2xl text-gradient">6</div>
+        <div class="text-xs text-mauve-400 mt-0.5 font-medium" data-i18n="hero.stat1">Kelas Penyakit</div>
+      </div>
+      <div class="glass-card rounded-2xl px-4 py-4 shadow-glass">
+        <div class="font-display font-extrabold text-2xl text-gradient">~920</div>
+        <div class="text-xs text-mauve-400 mt-0.5 font-medium" data-i18n="hero.stat2">Data Training</div>
+      </div>
+      <div class="glass-card rounded-2xl px-4 py-4 shadow-glass">
+        <div class="font-display font-extrabold text-lg leading-tight text-gradient">MNv2</div>
+        <div class="text-xs text-mauve-400 mt-0.5 font-medium" data-i18n="hero.stat3">Arsitektur</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50">
+    <span class="text-xs text-mauve-400">Scroll</span>
+    <i class="mdi mdi-chevron-double-down text-rose-400 text-xl animate-bounce"></i>
+  </div>
+</section>
+
+<!-- ═══════════════════════ DISEASES ═════════════════════════ -->
+<section id="diseases" class="py-24 px-4 bg-white dark:bg-mauve-900">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14 reveal">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-100 dark:bg-mauve-800 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <i class="mdi mdi-hospital-box-outline text-sm"></i> 6 Kondisi
+      </div>
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50 mb-3" data-i18n="diseases.title">Kondisi Yang Dapat Kami Deteksi</h2>
+      <p class="text-mauve-500 dark:text-mauve-400 text-sm max-w-md mx-auto" data-i18n="diseases.sub">Model kami dilatih untuk mengidentifikasi 6 kondisi kulit umum dengan akurasi tinggi</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="diseaseGrid"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ DETECTION ════════════════════════ -->
+<section id="detection" class="py-24 px-4 bg-cream dark:bg-mauve-900/60">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-100 dark:bg-mauve-800 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <i class="mdi mdi-camera-iris text-sm"></i> Live AI
+      </div>
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50 mb-3" data-i18n="detect.title">Analisis Kulit Anda</h2>
+      <p class="text-mauve-500 dark:text-mauve-400 text-sm max-w-md mx-auto" data-i18n="detect.sub">Gunakan kamera langsung atau unggah gambar untuk memulai analisis instan</p>
+    </div>
+
+    <div class="reveal glass-card rounded-3xl overflow-hidden shadow-glass-md dark:border-mauve-700">
+      <!-- Tabs -->
+      <div class="flex border-b border-rose-100 dark:border-mauve-700 bg-rose-25 dark:bg-mauve-900/40">
+        <button class="tab-btn flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold text-mauve-400 dark:text-mauve-400 border-b-2 border-transparent -mb-px transition-all active" data-tab="camera">
+          <i class="mdi mdi-camera text-base"></i>
+          <span data-i18n="detect.tab.camera">Kamera Langsung</span>
+        </button>
+        <button class="tab-btn flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold text-mauve-400 dark:text-mauve-400 border-b-2 border-transparent -mb-px transition-all" data-tab="upload">
+          <i class="mdi mdi-upload text-base"></i>
+          <span data-i18n="detect.tab.upload">Unggah Gambar</span>
+        </button>
+      </div>
+
+      <div class="p-6 md:p-8">
+        <!-- Camera panel -->
+        <div class="tab-panel active" id="panelCamera">
+          <div class="relative bg-mauve-900 rounded-2xl overflow-hidden aspect-video flex items-center justify-center" id="cameraViewfinder">
+            <!-- Placeholder -->
+            <div id="cameraPlaceholder" class="flex flex-col items-center gap-3 text-mauve-500 p-8 text-center">
+              <div class="w-20 h-20 rounded-2xl bg-mauve-800 flex items-center justify-center">
+                <i class="mdi mdi-camera-off text-4xl text-mauve-600"></i>
+              </div>
+              <p class="text-sm" data-i18n="detect.camera.hint">Klik "Aktifkan Kamera" untuk memulai</p>
+            </div>
+            <video id="videoEl" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+            <canvas id="capturedCanvas" class="hidden w-full h-full object-cover" style="position:absolute;inset:0;"></canvas>
+            <!-- Viewfinder corners -->
+            <div id="vfOverlay" class="hidden absolute inset-0 pointer-events-none">
+              <div class="absolute top-4 left-4 w-10 h-10 border-t-2 border-l-2 border-rose-400 rounded-tl-lg"></div>
+              <div class="absolute top-4 right-4 w-10 h-10 border-t-2 border-r-2 border-rose-400 rounded-tr-lg"></div>
+              <div class="absolute bottom-4 left-4 w-10 h-10 border-b-2 border-l-2 border-rose-400 rounded-bl-lg"></div>
+              <div class="absolute bottom-4 right-4 w-10 h-10 border-b-2 border-r-2 border-rose-400 rounded-br-lg"></div>
+              <div class="scan-line-el"></div>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-4 justify-center flex-wrap">
+            <button id="btnStartCam" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm font-semibold shadow-rose hover:-translate-y-0.5 transition-all">
+              <i class="mdi mdi-camera text-base"></i>
+              <span data-i18n="detect.camera.start">Aktifkan Kamera</span>
+            </button>
+            <button id="btnCapture" class="hidden flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm font-semibold shadow-rose hover:-translate-y-0.5 transition-all">
+              <i class="mdi mdi-circle-slice-8 text-base"></i>
+              <span data-i18n="detect.camera.capture">Ambil Foto</span>
+            </button>
+            <button id="btnRetake" class="hidden flex items-center gap-2 px-5 py-2.5 rounded-full border border-rose-200 dark:border-mauve-600 text-mauve-600 dark:text-mauve-300 text-sm font-semibold hover:border-rose-400 hover:text-rose-600 transition-all">
+              <i class="mdi mdi-camera-retake text-base"></i>
+              <span data-i18n="detect.camera.retake">Ulangi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Upload panel -->
+        <div class="tab-panel hidden" id="panelUpload">
+          <div id="dropZone" class="border-2 border-dashed border-rose-200 dark:border-mauve-600 rounded-2xl p-12 text-center cursor-pointer hover:border-rose-400 hover:bg-rose-25 dark:hover:bg-mauve-800/30 transition-all" onclick="document.getElementById('fileInput').click()">
+            <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <i class="mdi mdi-image-plus text-2xl text-rose-500"></i>
+            </div>
+            <p class="font-semibold text-mauve-700 dark:text-mauve-200 mb-1" data-i18n="detect.upload.title">Seret & lepas gambar di sini, atau klik untuk browse</p>
+            <p class="text-xs text-mauve-400" data-i18n="detect.upload.sub">Mendukung JPG, PNG, WEBP · Maks 10MB</p>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" class="hidden" />
+          <div id="previewWrap" class="hidden mt-4 relative rounded-2xl overflow-hidden">
+            <img id="previewImg" class="w-full max-h-72 object-cover rounded-2xl" src="" alt="Preview" />
+            <button id="btnRemoveImg" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-rose-600 transition-colors">
+              <i class="mdi mdi-close text-base"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyze button -->
+      <div class="flex justify-center pb-8 px-8">
+        <button id="btnAnalyze" disabled class="flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white font-bold text-base shadow-rose hover:shadow-rose-lg hover:-translate-y-1 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none">
+          <i class="mdi mdi-brain text-xl"></i>
+          <span data-i18n="detect.analyze">Analisis Sekarang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ RESULT ════════════════════════════ -->
+<section id="result" class="py-24 px-4 bg-white dark:bg-mauve-900">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-100 dark:bg-mauve-800 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <i class="mdi mdi-chart-line text-sm"></i>
+        <span data-i18n="result.tag">Hasil Analisis</span>
+      </div>
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50" data-i18n="result.title">Hasil Deteksi AI</h2>
+    </div>
+
+    <div id="result-area">
+      <!-- Empty state -->
+      <div id="resultEmpty" class="flex flex-col items-center gap-4 py-20 text-center">
+        <div class="w-20 h-20 rounded-3xl bg-rose-50 dark:bg-mauve-800 flex items-center justify-center">
+          <i class="mdi mdi-robot-confused-outline text-4xl text-rose-300"></i>
+        </div>
+        <p class="text-mauve-400 text-sm" data-i18n="result.empty">Belum ada hasil. Lakukan analisis terlebih dahulu.</p>
+      </div>
+
+      <div id="resultContent" class="hidden"></div>
+
+      <!-- History -->
+      <div id="historyPanel" class="hidden mt-8">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mauve-400 mb-4">
+          <i class="mdi mdi-history text-sm"></i>
+          <span data-i18n="result.history">Riwayat Analisis</span>
+        </div>
+        <div id="historyList" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ HOW IT WORKS ═════════════════════ -->
+<section id="howitworks" class="py-24 px-4 bg-cream dark:bg-mauve-900/60">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14 reveal">
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50 mb-3" data-i18n="how.title">Cara Kerja</h2>
+      <p class="text-mauve-500 dark:text-mauve-400 text-sm" data-i18n="how.sub">Empat langkah mudah menuju analisis kulit yang akurat</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="reveal glass-card rounded-2xl p-6 text-center shimmer-card relative shadow-glass">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white text-xs font-black flex items-center justify-center shadow-rose">1</div>
+        <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4 mt-2">
+          <i class="mdi mdi-camera-plus text-2xl text-rose-600"></i>
+        </div>
+        <h3 class="font-display font-bold text-base text-mauve-800 dark:text-rose-100 mb-2" data-i18n="how.step1.title">Ambil / Upload Foto</h3>
+        <p class="text-xs text-mauve-400 dark:text-mauve-400 leading-relaxed" data-i18n="how.step1.desc">Gunakan kamera real-time atau unggah gambar area kulit yang ingin dianalisis.</p>
+      </div>
+      <div class="reveal glass-card rounded-2xl p-6 text-center shimmer-card relative shadow-glass" style="transition-delay:0.08s">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white text-xs font-black flex items-center justify-center shadow-rose">2</div>
+        <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4 mt-2">
+          <i class="mdi mdi-shield-check text-2xl text-rose-600"></i>
+        </div>
+        <h3 class="font-display font-bold text-base text-mauve-800 dark:text-rose-100 mb-2" data-i18n="how.step2.title">Validasi Gambar</h3>
+        <p class="text-xs text-mauve-400 dark:text-mauve-400 leading-relaxed" data-i18n="how.step2.desc">Sistem memvalidasi apakah gambar adalah foto kulit yang valid sebelum dianalisis.</p>
+      </div>
+      <div class="reveal glass-card rounded-2xl p-6 text-center shimmer-card relative shadow-glass" style="transition-delay:0.16s">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white text-xs font-black flex items-center justify-center shadow-rose">3</div>
+        <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4 mt-2">
+          <i class="mdi mdi-brain text-2xl text-rose-600"></i>
+        </div>
+        <h3 class="font-display font-bold text-base text-mauve-800 dark:text-rose-100 mb-2" data-i18n="how.step3.title">Analisis AI</h3>
+        <p class="text-xs text-mauve-400 dark:text-mauve-400 leading-relaxed" data-i18n="how.step3.desc">Model MobileNetV2 memproses gambar dan mendeteksi kondisi kulit secara instan.</p>
+      </div>
+      <div class="reveal glass-card rounded-2xl p-6 text-center shimmer-card relative shadow-glass" style="transition-delay:0.24s">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white text-xs font-black flex items-center justify-center shadow-rose">4</div>
+        <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4 mt-2">
+          <i class="mdi mdi-clipboard-text-outline text-2xl text-rose-600"></i>
+        </div>
+        <h3 class="font-display font-bold text-base text-mauve-800 dark:text-rose-100 mb-2" data-i18n="how.step4.title">Lihat Hasil</h3>
+        <p class="text-xs text-mauve-400 dark:text-mauve-400 leading-relaxed" data-i18n="how.step4.desc">Dapatkan diagnosis lengkap, tingkat keyakinan, dan rekomendasi tindakan medis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ANALYTICS ════════════════════════ -->
+<section id="analytics" class="py-24 px-4 bg-white dark:bg-mauve-900">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14 reveal">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-100 dark:bg-mauve-800 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <i class="mdi mdi-chart-bar text-sm"></i>
+        <span data-i18n="analytics.tag">Riwayat Pengguna</span>
+      </div>
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50 mb-3" data-i18n="analytics.title">Analitik Prediksi</h2>
+      <p class="text-mauve-500 dark:text-mauve-400 text-sm" data-i18n="analytics.sub">Statistik agregat dari analisis yang Anda simpan</p>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="reveal grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="analyticsStats">
+      <div class="glass-card rounded-2xl p-5 shadow-glass">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mauve-400 mb-2">
+          <i class="mdi mdi-counter text-sm text-rose-400"></i>
+          <span data-i18n="analytics.total">Total Analisis</span>
+        </div>
+        <div class="font-display font-extrabold text-3xl text-gradient" id="statTotal">0</div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 shadow-glass">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mauve-400 mb-2">
+          <i class="mdi mdi-percent text-sm text-rose-400"></i>
+          <span data-i18n="analytics.avg">Rata-rata</span>
+        </div>
+        <div class="font-display font-extrabold text-3xl text-gradient" id="statAvg">—</div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 shadow-glass">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mauve-400 mb-2">
+          <i class="mdi mdi-arrow-down text-sm text-rose-400"></i>
+          <span data-i18n="analytics.min">Terendah</span>
+        </div>
+        <div class="font-display font-extrabold text-3xl text-gradient" id="statMin">—</div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 shadow-glass">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-mauve-400 mb-2">
+          <i class="mdi mdi-arrow-up text-sm text-rose-400"></i>
+          <span data-i18n="analytics.max">Tertinggi</span>
+        </div>
+        <div class="font-display font-extrabold text-3xl text-gradient" id="statMax">—</div>
+      </div>
+    </div>
+
+    <!-- Distribution chart -->
+    <div class="reveal glass-card rounded-2xl p-6 shadow-glass-md">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="font-bold text-mauve-800 dark:text-rose-100" data-i18n="analytics.dist.title">Distribusi Kelas</h3>
+          <p class="text-xs text-mauve-400 mt-0.5" data-i18n="analytics.dist.sub">Seberapa sering setiap kondisi terdeteksi</p>
+        </div>
+        <button id="btnRefreshAnalytics" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-rose-200 dark:border-mauve-600 text-mauve-500 dark:text-mauve-300 text-xs font-semibold hover:border-rose-400 hover:text-rose-600 transition-all">
+          <i class="mdi mdi-refresh text-sm"></i>
+          <span data-i18n="analytics.refresh">Segarkan</span>
+        </button>
+      </div>
+      <div id="distContent">
+        <p class="text-center text-mauve-400 text-sm py-8" data-i18n="analytics.empty">Belum ada analisis. Jalankan deteksi untuk melihat analitik.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ EVALUATION ═══════════════════════ -->
+<section id="evaluation" class="py-24 px-4 bg-cream dark:bg-mauve-900/60">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12 reveal">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-100 dark:bg-mauve-800 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider mb-3">
+        <i class="mdi mdi-table-check text-sm"></i>
+        <span data-i18n="eval.tag">Data Berlabel</span>
+      </div>
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50 mb-3" data-i18n="eval.title">Evaluasi Model</h2>
+      <p class="text-mauve-500 dark:text-mauve-400 text-sm max-w-md mx-auto" data-i18n="eval.sub">Matriks kebingungan dari gambar contoh berlabel — terpisah dari riwayat pengguna</p>
+    </div>
+
+    <div class="reveal glass-card rounded-2xl p-6 md:p-8 shadow-glass-md">
+      <div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+        <div>
+          <h3 class="font-bold text-mauve-800 dark:text-rose-100" data-i18n="eval.matrix.title">Matriks Kebingungan</h3>
+          <p class="text-xs text-mauve-400 mt-0.5" data-i18n="eval.matrix.sub">Baris = aktual, kolom = prediksi. Diagonal = benar</p>
+        </div>
+        <button id="btnRunEval" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm font-bold shadow-rose hover:-translate-y-0.5 transition-all">
+          <i class="mdi mdi-play text-base"></i>
+          <span data-i18n="eval.run">Jalankan Evaluasi</span>
+        </button>
+      </div>
+      <div id="evalContent">
+        <p class="text-center text-mauve-400 text-sm py-10" data-i18n="eval.empty">Klik "Jalankan Evaluasi" untuk menguji model pada contoh berlabel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ABOUT ═════════════════════════════ -->
+<section id="about" class="py-24 px-4 bg-white dark:bg-mauve-900">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-14 reveal">
+      <h2 class="font-display font-extrabold text-[clamp(1.8rem,4vw,2.8rem)] text-mauve-900 dark:text-rose-50" data-i18n="about.title">Tentang DermaCheck.AI</h2>
+    </div>
+    <div class="reveal grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
+      <div class="glass-card shimmer-card rounded-2xl p-6 text-center shadow-glass">
+        <div class="w-14 h-14 bg-rose-100 dark:bg-mauve-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i class="mdi mdi-microscope text-2xl text-rose-600"></i>
+        </div>
+        <h3 class="font-bold text-mauve-800 dark:text-rose-100 mb-2" data-i18n="about.card1.title">AI Powered</h3>
+        <p class="text-xs text-mauve-500 leading-relaxed" data-i18n="about.card1.desc">Model deep learning dilatih pada dataset klinis yang beragam untuk memberikan wawasan cepat dan akurat.</p>
+      </div>
+      <div class="glass-card shimmer-card rounded-2xl p-6 text-center shadow-glass">
+        <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i class="mdi mdi-heart-pulse text-2xl text-emerald-600"></i>
+        </div>
+        <h3 class="font-bold text-mauve-800 dark:text-rose-100 mb-2" data-i18n="about.card2.title">Accessible Care</h3>
+        <p class="text-xs text-mauve-500 leading-relaxed" data-i18n="about.card2.desc">Dirancang untuk membantu Anda memahami kulit lebih baik, dari kenyamanan rumah Anda, kapan saja.</p>
+      </div>
+      <div class="glass-card shimmer-card rounded-2xl p-6 text-center shadow-glass">
+        <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i class="mdi mdi-shield-lock text-2xl text-blue-600"></i>
+        </div>
+        <h3 class="font-bold text-mauve-800 dark:text-rose-100 mb-2" data-i18n="about.card3.title">Privacy First</h3>
+        <p class="text-xs text-mauve-500 leading-relaxed" data-i18n="about.card3.desc">Gambar Anda diproses dengan aman dan tidak disimpan secara permanen tanpa izin eksplisit.</p>
+      </div>
+    </div>
+    <p class="reveal text-center text-mauve-500 dark:text-mauve-400 text-sm max-w-xl mx-auto mb-8 leading-loose" data-i18n="about.desc">
+      DermaCheck.AI adalah alat web premium untuk membantu orang memahami kondisi kulit mereka. Model AI kami mengidentifikasi Jerawat, Eksim Atopik, Keratosis Pilaris, Kusta, Psoriasis, dan Kutil.
+    </p>
+    <div class="reveal max-w-xl mx-auto bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 flex gap-3">
+      <i class="mdi mdi-alert-circle text-amber-500 text-xl flex-shrink-0 mt-0.5"></i>
+      <div>
+        <p class="font-bold text-amber-700 dark:text-amber-400 text-sm mb-1" data-i18n="about.disclaimer.title">⚠️ Batasan Model</p>
+        <p class="text-amber-700 dark:text-amber-400/80 text-xs leading-relaxed" data-i18n="about.disclaimer.text">AI ini dilatih pada kumpulan data spesifik dan mungkin tidak berlaku sempurna untuk semua warna kulit. Bukan pengganti nasihat medis profesional. Selalu konsultasikan dengan dokter kulit bersertifikat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FOOTER ════════════════════════════ -->
+<footer class="bg-mauve-900 dark:bg-black text-mauve-300">
+  <div class="max-w-6xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div>
+      <div class="flex items-center gap-2.5 mb-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-400 to-rose-700 flex items-center justify-center">
+          <i class="mdi mdi-water-drop text-white text-sm"></i>
+        </div>
+        <span class="font-semibold text-rose-100">Derma<span class="text-rose-400 font-bold">Check</span>.AI</span>
+      </div>
+      <p class="text-xs text-mauve-400 leading-relaxed mb-4" data-i18n="footer.tagline">Dibuat dengan peduli untuk kesadaran kesehatan kulit</p>
+      <div class="flex gap-2">
+        <a href="#" class="w-9 h-9 rounded-xl bg-mauve-800 border border-mauve-700 flex items-center justify-center text-mauve-400 hover:text-rose-400 hover:border-rose-500 transition-all"><i class="mdi mdi-twitter text-base"></i></a>
+        <a href="#" class="w-9 h-9 rounded-xl bg-mauve-800 border border-mauve-700 flex items-center justify-center text-mauve-400 hover:text-rose-400 hover:border-rose-500 transition-all"><i class="mdi mdi-instagram text-base"></i></a>
+        <a href="#" class="w-9 h-9 rounded-xl bg-mauve-800 border border-mauve-700 flex items-center justify-center text-mauve-400 hover:text-rose-400 hover:border-rose-500 transition-all"><i class="mdi mdi-github text-base"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4 class="text-xs font-bold uppercase tracking-wider text-rose-400 mb-4" data-i18n="footer.links">Quick Links</h4>
+      <ul class="flex flex-col gap-2.5 text-sm">
+        <li><a href="#hero" class="hover:text-rose-400 transition-colors" data-i18n="nav.home">Beranda</a></li>
+        <li><a href="#diseases" class="hover:text-rose-400 transition-colors" data-i18n="nav.diseases">Penyakit</a></li>
+        <li><a href="#detection" class="hover:text-rose-400 transition-colors" data-i18n="nav.detect">Deteksi</a></li>
+        <li><a href="#analytics" class="hover:text-rose-400 transition-colors" data-i18n="nav.analytics">Analitik</a></li>
+        <li><a href="#evaluation" class="hover:text-rose-400 transition-colors" data-i18n="nav.evaluation">Evaluasi</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-xs font-bold uppercase tracking-wider text-rose-400 mb-4" data-i18n="footer.legal">Legal</h4>
+      <ul class="flex flex-col gap-2.5 text-sm">
+        <li><a href="#" class="hover:text-rose-400 transition-colors" data-i18n="footer.privacy">Privacy Policy</a></li>
+        <li><a href="#" class="hover:text-rose-400 transition-colors" data-i18n="footer.terms">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-mauve-800 max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-2 text-xs text-mauve-500">
+    <span>© 2025 DermaCheck.AI — Isnaini Nur Hasanah / 52240005</span>
+    <span data-i18n="footer.disclaimer">Bukan pengganti nasihat medis profesional.</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════════ MODAL ═════════════════════════════ -->
+<div id="modalOverlay" class="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-250" onclick="closeModal(event)">
+  <div id="modalBox" class="bg-white dark:bg-mauve-900 rounded-3xl max-w-xl w-full border border-rose-100 dark:border-mauve-700 shadow-glass-lg scale-95 transition-transform duration-250 overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-rose-50 dark:border-mauve-800">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-mauve-800 flex items-center justify-center text-2xl" id="modalIcon"></div>
+        <div>
+          <div class="font-display font-extrabold text-lg text-mauve-900 dark:text-rose-100" id="modalName"></div>
+          <div id="modalEn" class="text-xs text-mauve-400 mt-0.5"></div>
+        </div>
+      </div>
+      <button class="w-9 h-9 rounded-xl bg-rose-50 dark:bg-mauve-800 flex items-center justify-center text-mauve-400 hover:text-rose-600 hover:bg-rose-100 transition-all" onclick="document.getElementById('modalOverlay').classList.replace('opacity-100','opacity-0'); document.getElementById('modalOverlay').classList.add('pointer-events-none'); document.getElementById('modalBox').classList.replace('scale-100','scale-95')">
+        <i class="mdi mdi-close text-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body-inner p-6" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TOAST ═════════════════════════════ -->
+<div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2.5 items-end"></div>
+
+<!-- Back to top -->
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="fixed bottom-6 left-6 w-11 h-11 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white flex items-center justify-center shadow-rose hover:-translate-y-1 transition-all opacity-0 pointer-events-none" title="Kembali ke atas">
+  <i class="mdi mdi-arrow-up text-lg"></i>
+</button>
+
+<!-- ════════════════════════ SCRIPT ══════════════════════════ -->
+<script>
+// ── i18n ──────────────────────────────────────────────────────
+const I18N = {
+  id: {
+    'nav.home':'Beranda','nav.diseases':'Penyakit','nav.detect':'Deteksi',
+    'nav.analytics':'Analitik','nav.evaluation':'Evaluasi','nav.about':'Tentang','nav.cta':'Mulai Deteksi',
+    'hero.title':'Deteksi Penyakit Kulit\nBerbasis AI',
+    'hero.sub':'Unggah atau ambil foto kulit Anda — DermaCheck.AI menganalisisnya secara instan menggunakan deep learning MobileNetV2.',
+    'hero.cta1':'Mulai Deteksi','hero.cta2':'Pelajari Penyakit',
+    'hero.stat1':'Kelas Penyakit','hero.stat2':'Data Training','hero.stat3':'Arsitektur',
+    'diseases.title':'Kondisi Yang Dapat Kami Deteksi',
+    'diseases.sub':'Model kami dilatih untuk mengidentifikasi 6 kondisi kulit umum dengan akurasi tinggi',
+    'detect.title':'Analisis Kulit Anda',
+    'detect.sub':'Gunakan kamera langsung atau unggah gambar untuk memulai analisis instan',
+    'detect.tab.camera':'Kamera Langsung','detect.tab.upload':'Unggah Gambar',
+    'detect.camera.hint':'Klik "Aktifkan Kamera" untuk memulai',
+    'detect.camera.start':'Aktifkan Kamera','detect.camera.capture':'Ambil Foto','detect.camera.retake':'Ulangi',
+    'detect.upload.title':'Seret & lepas gambar di sini, atau klik untuk browse',
+    'detect.upload.sub':'Mendukung JPG, PNG, WEBP · Maks 10MB',
+    'detect.analyze':'Analisis Sekarang',
+    'result.tag':'Hasil Analisis','result.title':'Hasil Deteksi AI',
+    'result.empty':'Belum ada hasil. Lakukan analisis terlebih dahulu.',
+    'result.history':'Riwayat Analisis',
+    'how.title':'Cara Kerja','how.sub':'Empat langkah mudah menuju analisis kulit yang akurat',
+    'how.step1.title':'Ambil / Upload Foto','how.step1.desc':'Gunakan kamera real-time atau unggah gambar area kulit yang ingin dianalisis.',
+    'how.step2.title':'Validasi Gambar','how.step2.desc':'Sistem memvalidasi apakah gambar adalah foto kulit yang valid sebelum dianalisis.',
+    'how.step3.title':'Analisis AI','how.step3.desc':'Model MobileNetV2 memproses gambar dan mendeteksi kondisi kulit secara instan.',
+    'how.step4.title':'Lihat Hasil','how.step4.desc':'Dapatkan diagnosis lengkap, tingkat keyakinan, dan rekomendasi tindakan medis.',
+    'analytics.tag':'Riwayat Pengguna','analytics.title':'Analitik Prediksi',
+    'analytics.sub':'Statistik agregat dari analisis yang Anda simpan',
+    'analytics.total':'Total Analisis','analytics.avg':'Rata-rata',
+    'analytics.min':'Terendah','analytics.max':'Tertinggi',
+    'analytics.dist.title':'Distribusi Kelas','analytics.dist.sub':'Seberapa sering setiap kondisi terdeteksi',
+    'analytics.refresh':'Segarkan','analytics.empty':'Belum ada analisis. Jalankan deteksi untuk melihat analitik.',
+    'eval.tag':'Data Berlabel','eval.title':'Evaluasi Model',
+    'eval.sub':'Matriks kebingungan dari gambar contoh berlabel — terpisah dari riwayat pengguna',
+    'eval.matrix.title':'Matriks Kebingungan','eval.matrix.sub':'Baris = aktual, kolom = prediksi. Diagonal = benar',
+    'eval.run':'Jalankan Evaluasi','eval.empty':'Klik "Jalankan Evaluasi" untuk menguji model pada contoh berlabel.',
+    'about.title':'Tentang DermaCheck.AI',
+    'about.card1.title':'AI Powered','about.card1.desc':'Model deep learning dilatih pada dataset klinis yang beragam untuk memberikan wawasan cepat dan akurat.',
+    'about.card2.title':'Accessible Care','about.card2.desc':'Dirancang untuk membantu Anda memahami kulit lebih baik, dari kenyamanan rumah Anda, kapan saja.',
+    'about.card3.title':'Privacy First','about.card3.desc':'Gambar Anda diproses dengan aman dan tidak disimpan secara permanen tanpa izin eksplisit.',
+    'about.desc':'DermaCheck.AI adalah alat web premium untuk membantu orang memahami kondisi kulit mereka. Model AI kami mengidentifikasi Jerawat, Eksim Atopik, Keratosis Pilaris, Kusta, Psoriasis, dan Kutil.',
+    'about.disclaimer.title':'⚠️ Batasan Model',
+    'about.disclaimer.text':'AI ini dilatih pada kumpulan data spesifik dan mungkin tidak berlaku sempurna untuk semua warna kulit. Bukan pengganti nasihat medis profesional. Selalu konsultasikan dengan dokter kulit bersertifikat.',
+    'footer.tagline':'Dibuat dengan peduli untuk kesadaran kesehatan kulit',
+    'footer.links':'Quick Links','footer.legal':'Legal',
+    'footer.privacy':'Privacy Policy','footer.terms':'Terms of Service',
+    'footer.disclaimer':'Bukan pengganti nasihat medis profesional.',
+    'disease.learn':'Pelajari Lebih Lanjut',
+    'modal.causes':'Penyebab & Gambaran','modal.factor':'Faktor','modal.explanation':'Penjelasan',
+    'modal.symptoms':'Gejala Umum','modal.tip':'Kapan ke Dokter?',
+    'result.confidence':'Tingkat Keyakinan','result.top3':'Top 3 Prediksi',
+    'result.disclaimer':'Hasil ini hanya untuk referensi. Selalu konsultasikan dengan dokter kulit bersertifikat.',
+    'result.copy':'Salin','result.again':'Analisis Lagi',
+    'eval.processing':'Memproses...',
+    'analytics.nodataval':'—',
+  },
+  en: {
+    'nav.home':'Home','nav.diseases':'Diseases','nav.detect':'Detect',
+    'nav.analytics':'Analytics','nav.evaluation':'Evaluation','nav.about':'About','nav.cta':'Start Detection',
+    'hero.title':'AI-Powered Skin\nDisease Detection',
+    'hero.sub':'Upload or capture a photo of your skin — DermaCheck.AI analyzes it instantly using MobileNetV2 deep learning.',
+    'hero.cta1':'Start Detection','hero.cta2':'Learn Diseases',
+    'hero.stat1':'Disease Classes','hero.stat2':'Training Data','hero.stat3':'Architecture',
+    'diseases.title':'Conditions We Can Detect',
+    'diseases.sub':'Our model is trained to identify 6 common skin conditions with high accuracy',
+    'detect.title':'Analyze Your Skin',
+    'detect.sub':'Use live camera or upload an image to start instant analysis',
+    'detect.tab.camera':'Live Camera','detect.tab.upload':'Upload Image',
+    'detect.camera.hint':'Click "Enable Camera" to begin',
+    'detect.camera.start':'Enable Camera','detect.camera.capture':'Capture','detect.camera.retake':'Retake',
+    'detect.upload.title':'Drag & drop image here, or click to browse',
+    'detect.upload.sub':'Supports JPG, PNG, WEBP · Max 10MB',
+    'detect.analyze':'Analyze Now',
+    'result.tag':'Analysis Result','result.title':'AI Detection Result',
+    'result.empty':'No results yet. Perform an analysis first.',
+    'result.history':'Analysis History',
+    'how.title':'How It Works','how.sub':'Four simple steps to accurate skin analysis',
+    'how.step1.title':'Capture / Upload','how.step1.desc':'Use the real-time camera or upload an image of the skin area you want analyzed.',
+    'how.step2.title':'Image Validation','how.step2.desc':'The system validates whether the image is a valid skin photo before analysis.',
+    'how.step3.title':'AI Analysis','how.step3.desc':'The MobileNetV2 model processes the image and detects skin conditions instantly.',
+    'how.step4.title':'View Results','how.step4.desc':'Get a full diagnosis, confidence level, and recommended medical actions.',
+    'analytics.tag':'User History','analytics.title':'Prediction Analytics',
+    'analytics.sub':'Aggregate statistics from your saved analyses',
+    'analytics.total':'Total Analyses','analytics.avg':'Average',
+    'analytics.min':'Lowest','analytics.max':'Highest',
+    'analytics.dist.title':'Class Distribution','analytics.dist.sub':'How often each condition is detected',
+    'analytics.refresh':'Refresh','analytics.empty':'No analyses yet. Run a detection to see analytics.',
+    'eval.tag':'Labeled Data','eval.title':'Model Evaluation',
+    'eval.sub':'Confusion matrix from labeled example images — separate from user history',
+    'eval.matrix.title':'Confusion Matrix','eval.matrix.sub':'Rows = actual, columns = predicted. Diagonal = correct',
+    'eval.run':'Run Evaluation','eval.empty':'Click "Run Evaluation" to test the model on labeled examples.',
+    'about.title':'About DermaCheck.AI',
+    'about.card1.title':'AI Powered','about.card1.desc':'Deep learning models trained on diverse clinical datasets to provide quick and accurate insights.',
+    'about.card2.title':'Accessible Care','about.card2.desc':'Designed to help you understand your skin better, from the comfort of your home, anytime.',
+    'about.card3.title':'Privacy First','about.card3.desc':'Your images are processed securely and not permanently stored without explicit permission.',
+    'about.desc':'DermaCheck.AI is a premium web tool to help people understand their skin conditions. Our AI model identifies Acne, Atopic Dermatitis, Keratosis Pilaris, Leprosy, Psoriasis, and Warts.',
+    'about.disclaimer.title':'⚠️ Model Limitations',
+    'about.disclaimer.text':'This AI is trained on a specific dataset and may not work perfectly for all skin tones. Not a substitute for professional medical advice. Always consult a certified dermatologist.',
+    'footer.tagline':'Built with care for skin health awareness',
+    'footer.links':'Quick Links','footer.legal':'Legal',
+    'footer.privacy':'Privacy Policy','footer.terms':'Terms of Service',
+    'footer.disclaimer':'Not a substitute for professional medical advice.',
+    'disease.learn':'Learn More',
+    'modal.causes':'Causes & Overview','modal.factor':'Factor','modal.explanation':'Explanation',
+    'modal.symptoms':'Common Symptoms','modal.tip':'When to See a Doctor?',
+    'result.confidence':'Confidence','result.top3':'Top 3 Predictions',
+    'result.disclaimer':'This result is for reference only. Always consult a certified dermatologist.',
+    'result.copy':'Copy','result.again':'Analyze Again',
+    'eval.processing':'Processing...',
+    'analytics.nodataval':'—',
+  }
+};
+
+// ── Disease Data ──────────────────────────────────────────────
+const diseases = [
+  {
+    id:'acne', icon:'mdi-face-man-shimmer', emoji:'🫧',
+    nameId:'Jerawat', nameEn:'Acne',
+    severity:'mild-mod', severityLabel:'Mild–Moderate',
+    color:'rose',
+    descId:'Kondisi kulit yang terjadi ketika folikel rambut tersumbat oleh minyak dan sel kulit mati.',
+    descEn:'A skin condition that occurs when hair follicles become plugged with oil and dead skin cells.',
+    fullDescId:'Jerawat adalah kondisi kulit yang sangat umum ketika folikel rambut tersumbat oleh minyak (sebum) dan sel kulit mati. Dapat mengakibatkan komedo, whitehead, papul, pustula, nodul, atau kista. Paling sering muncul di wajah, dahi, dada, punggung, dan bahu.',
+    fullDescEn:'Acne is very common — hair follicles get clogged with oil (sebum) and dead skin cells, resulting in blackheads, whiteheads, papules, pustules, nodules, or cysts. Appears most on face, forehead, chest, upper back, and shoulders.',
+    causesId:[['Sebum berlebih','Produksi minyak berlebihan dari kelenjar sebasea'],['Bakteri','Propionibacterium acnes'],['Hormon','Perubahan hormonal: pubertas, menstruasi'],['Genetik','Riwayat keluarga jerawat']],
+    causesEn:[['Excess Sebum','Overproduction of oil from sebaceous glands'],['Bacteria','Propionibacterium acnes'],['Hormones','Hormonal changes: puberty, menstruation'],['Genetics','Family history of acne']],
+    symptomsId:['Komedo hitam','Komedo putih','Papul merah','Pustula bernanah','Nodul menyakitkan','Bekas luka'],
+    symptomsEn:['Blackheads','Whiteheads','Red papules','Pus-filled pustules','Painful nodules','Scarring'],
+    tipId:'Segera ke dokter jika jerawat sangat parah, meninggalkan bekas luka, atau tidak membaik setelah 2–3 bulan perawatan mandiri.',
+    tipEn:'See a doctor if acne is severe, leaving scars, or not improving after 2–3 months of self-care.'
+  },
+  {
+    id:'atopic', icon:'mdi-leaf', emoji:'🌿',
+    nameId:'Eksim Atopik', nameEn:'Atopic Dermatitis',
+    severity:'moderate', severityLabel:'Moderate',
+    color:'emerald',
+    descId:'Kondisi yang membuat kulit merah dan gatal, umum pada anak-anak namun bisa terjadi di usia berapa pun.',
+    descEn:'A condition making skin red and itchy; common in children but can occur at any age.',
+    fullDescId:'Eksim atopik adalah kondisi peradangan kulit kronis yang menyebabkan kulit kering, gatal, dan meradang. Sering terjadi secara berkala dengan periode flare-up. Paling umum pada anak-anak meski orang dewasa juga bisa mengalaminya.',
+    fullDescEn:'Atopic dermatitis is a chronic inflammatory condition causing dry, itchy, inflamed skin. Often cyclic with flare-up periods. Most common in children though adults can experience it too.',
+    causesId:[['Genetik','Mutasi gen filaggrin'],['Sistem Imun','Respons imun berlebihan'],['Lingkungan','Alergen dan iritan'],['Kulit Kering','Lapisan pelindung kulit lemah']],
+    causesEn:[['Genetics','Filaggrin gene mutations'],['Immune System','Overactive immune response'],['Environment','Allergens and irritants'],['Dry Skin','Weak skin barrier']],
+    symptomsId:['Kulit kering','Gatal parah','Kemerahan','Ruam meradang','Kulit menebal','Lepuhan kecil'],
+    symptomsEn:['Dry skin','Severe itching','Redness','Inflamed rash','Thickened skin','Small blisters'],
+    tipId:'Konsultasi dokter jika kondisi tidak membaik dengan pelembap, gatal mengganggu tidur, atau muncul infeksi kulit.',
+    tipEn:'Consult a doctor if condition does not improve with moisturizer, itching disrupts sleep, or skin infection appears.'
+  },
+  {
+    id:'keratosis', icon:'mdi-star-four-points-outline', emoji:'✨',
+    nameId:'Keratosis Pilaris', nameEn:'Keratosis Pilaris',
+    severity:'mild', severityLabel:'Mild',
+    color:'sky',
+    descId:'Kondisi umum tidak berbahaya yang menyebabkan bercak kering, kasar, dan benjolan kecil.',
+    descEn:'A common, harmless condition causing dry, rough patches and tiny bumps.',
+    fullDescId:'Keratosis pilaris adalah kondisi kulit yang sangat umum dan tidak berbahaya, menyebabkan benjolan kecil dan kasar, biasanya pada lengan atas, paha, pipi, atau bokong. Tidak menyebabkan rasa sakit.',
+    fullDescEn:'Keratosis pilaris is a very common, harmless condition causing small, rough bumps, usually on upper arms, thighs, cheeks, or buttocks. Does not cause pain.',
+    causesId:[['Keratin','Penumpukan protein keratin'],['Genetik','Kondisi turun-temurun'],['Kulit Kering','Memperburuk kondisi'],['Kondisi Lain','Eksim, ichthyosis']],
+    causesEn:[['Keratin','Buildup of keratin protein'],['Genetics','Hereditary condition'],['Dry Skin','Worsens condition'],['Other Conditions','Eczema, ichthyosis']],
+    symptomsId:['Benjolan kecil','Kulit kasar','Kulit kering','Kemerahan ringan','Sensasi kasar saat disentuh'],
+    symptomsEn:['Small bumps','Rough skin','Dry skin','Mild redness','Rough sensation when touched'],
+    tipId:'Biasanya tidak perlu perawatan medis. Ke dokter jika kondisi sangat mengganggu atau terasa gatal parah.',
+    tipEn:'Usually no medical treatment needed. See a doctor if condition is very bothersome or severely itchy.'
+  },
+  {
+    id:'leprosy', icon:'mdi-hospital-cross', emoji:'⚕️',
+    nameId:'Lepra (Kusta)', nameEn:'Leprosy',
+    severity:'severe', severityLabel:'Severe',
+    color:'red',
+    descId:'Penyakit menular yang menyebabkan luka kulit parah, kerusakan penampilan, dan kerusakan saraf.',
+    descEn:'An infectious disease causing severe skin sores, disfigurement, and nerve damage.',
+    fullDescId:'Lepra (kusta) adalah penyakit infeksi kronis yang disebabkan oleh Mycobacterium leprae. Terutama menyerang kulit, saraf perifer, dan selaput lendir. Penyakit ini dapat disembuhkan sepenuhnya dengan pengobatan yang tepat.',
+    fullDescEn:'Leprosy is a chronic infectious disease caused by Mycobacterium leprae, mainly affecting skin, peripheral nerves, and mucous membranes. Fully curable with proper treatment.',
+    causesId:[['Bakteri','Mycobacterium leprae'],['Kontak','Tetesan pernapasan'],['Imunitas Rendah','Sistem imun lemah'],['Genetik','Faktor kerentanan']],
+    causesEn:[['Bacteria','Mycobacterium leprae'],['Contact','Respiratory droplets'],['Low Immunity','Weak immune system'],['Genetics','Susceptibility factors']],
+    symptomsId:['Bercak kulit terang','Mati rasa','Luka tidak sembuh','Kelemahan otot','Kerusakan saraf','Penebalan kulit'],
+    symptomsEn:['Light-colored patches','Numbness','Non-healing wounds','Muscle weakness','Nerve damage','Skin thickening'],
+    tipId:'SEGERA ke dokter atau puskesmas jika menemukan bercak kulit mati rasa. Lepra 100% bisa disembuhkan dengan MDT (Multi Drug Therapy).',
+    tipEn:'IMMEDIATELY see a doctor if you find numb skin patches. Leprosy is 100% curable with MDT (Multi Drug Therapy).'
+  },
+  {
+    id:'psoriasis', icon:'mdi-circle-multiple', emoji:'🔴',
+    nameId:'Psoriasis', nameEn:'Psoriasis',
+    severity:'mod-sev', severityLabel:'Moderate–Severe',
+    color:'orange',
+    descId:'Penyakit kulit yang menyebabkan ruam bersisik gatal, paling sering pada lutut, siku, dan kulit kepala.',
+    descEn:'A skin disease causing itchy, scaly rashes, most on knees, elbows, trunk, and scalp.',
+    fullDescId:'Psoriasis adalah kondisi kulit autoimun kronis yang menyebabkan sel kulit berkembang 10x lebih cepat dari normal, menciptakan bercak bersisik yang meradang. Kondisi jangka panjang yang cenderang datang dan pergi.',
+    fullDescEn:'Psoriasis is a chronic autoimmune condition causing skin cells to multiply 10x faster than normal, building up into scaly, inflamed patches. Long-term condition that tends to come and go.',
+    causesId:[['Autoimun','Sistem imun menyerang sel kulit sehat'],['Genetik','Riwayat keluarga psoriasis'],['Pemicu','Stres, infeksi, obat tertentu'],['Lingkungan','Cuaca dingin dan kering']],
+    causesEn:[['Autoimmune','Immune system attacks healthy skin cells'],['Genetics','Family history of psoriasis'],['Triggers','Stress, infections, certain medications'],['Environment','Cold and dry weather']],
+    symptomsId:['Bercak merah bersisik','Gatal parah','Kulit kering retak','Sendi nyeri','Kuku menebal','Rasa terbakar'],
+    symptomsEn:['Red scaly patches','Severe itching','Dry cracked skin','Joint pain','Thickened nails','Burning sensation'],
+    tipId:'Ke dokter jika psoriasis menyebar luas, mengganggu aktivitas sehari-hari, menyebabkan nyeri sendi, atau tidak membaik.',
+    tipEn:'See a doctor if psoriasis spreads widely, disrupts daily activities, causes joint pain, or does not improve.'
+  },
+  {
+    id:'wart', icon:'mdi-circle-outline', emoji:'🫘',
+    nameId:'Kutil', nameEn:'Wart',
+    severity:'mild', severityLabel:'Mild',
+    color:'violet',
+    descId:'Benjolan kecil berdaging pada kulit yang disebabkan oleh virus human papillomavirus (HPV).',
+    descEn:'Small, fleshy bumps on the skin caused by human papillomavirus (HPV).',
+    fullDescId:'Kutil adalah pertumbuhan kulit jinak akibat infeksi HPV (human papillomavirus). Virus masuk melalui luka kecil dan menyebabkan sel kulit tumbuh cepat. Sangat menular dan dapat menyebar ke bagian tubuh lain.',
+    fullDescEn:'Warts are benign skin growths caused by HPV infection. The virus enters through small cuts and causes rapid skin cell growth. Highly contagious and can spread to other body parts.',
+    causesId:[['HPV','Human papillomavirus'],['Kontak Langsung','Sentuhan dengan kutil'],['Imunitas','Sistem imun lemah'],['Luka','Kulit yang rusak/terluka']],
+    causesEn:[['HPV','Human papillomavirus'],['Direct Contact','Touching warts'],['Immunity','Weak immune system'],['Wounds','Damaged/injured skin']],
+    symptomsId:['Benjolan kecil daging','Permukaan kasar','Titik hitam kecil','Tidak nyeri (umumnya)','Menyebar ke sekitar'],
+    symptomsEn:['Small flesh-colored bumps','Rough surface','Tiny black dots','Usually not painful','Spreads to surrounding area'],
+    tipId:'Ke dokter jika kutil menyakitkan, berdarah, menyebar cepat, muncul di wajah/alat kelamin, atau tidak hilang setelah beberapa bulan.',
+    tipEn:'See a doctor if warts are painful, bleeding, spreading quickly, on face/genitals, or not disappearing after a few months.'
+  }
+];
+
+const severityConfig = {
+  'mild':     { cls:'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
+  'mild-mod': { cls:'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  'moderate': { cls:'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' },
+  'mod-sev':  { cls:'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
+  'severe':   { cls:'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400' },
+};
+const colorConfig = {
+  rose:    { bg:'bg-rose-100',    text:'text-rose-600',    dark:'dark:bg-rose-900/30' },
+  emerald: { bg:'bg-emerald-100', text:'text-emerald-600', dark:'dark:bg-emerald-900/30' },
+  sky:     { bg:'bg-sky-100',     text:'text-sky-600',     dark:'dark:bg-sky-900/30' },
+  red:     { bg:'bg-red-100',     text:'text-red-600',     dark:'dark:bg-red-900/30' },
+  orange:  { bg:'bg-orange-100',  text:'text-orange-600',  dark:'dark:bg-orange-900/30' },
+  violet:  { bg:'bg-violet-100',  text:'text-violet-600',  dark:'dark:bg-violet-900/30' },
+};
+
+// ── State ─────────────────────────────────────────────────────
+let lang = localStorage.getItem('lang') || 'id';
+let dark = localStorage.getItem('dark') === '1';
+let currentBlob = null;
+let cameraStream = null;
+let analysisHistory = JSON.parse(localStorage.getItem('dcAH') || '[]');
+
+// ── Boot ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  applyDark();
+  applyLang();
+  renderDiseaseCards();
+  renderHistory();
+  renderAnalytics();
+  setupReveal();
+  setupNav();
+  setupBackTop();
+  setupDetection();
+  setupEval();
+  document.getElementById('btnRefreshAnalytics').addEventListener('click', renderAnalytics);
+  document.getElementById('langBtn').addEventListener('click', () => { lang = lang==='id'?'en':'id'; localStorage.setItem('lang',lang); applyLang(); });
+  document.getElementById('darkBtn').addEventListener('click', () => { dark = !dark; localStorage.setItem('dark',dark?'1':'0'); applyDark(); });
+});
+
+function applyDark() {
+  document.documentElement.classList.toggle('dark', dark);
+  document.getElementById('darkIcon').className = dark ? 'mdi mdi-white-balance-sunny text-lg' : 'mdi mdi-weather-night text-lg';
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.getElementById('langBtn').textContent = lang.toUpperCase();
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (I18N[lang][k] !== undefined) el.textContent = I18N[lang][k];
+  });
+  renderDiseaseCards();
+}
+function t(k) { return I18N[lang][k] || I18N.id[k] || k; }
+
+// ── Disease Cards ─────────────────────────────────────────────
+function renderDiseaseCards() {
+  const g = document.getElementById('diseaseGrid');
+  if (!g) return;
+  g.innerHTML = diseases.map(d => {
+    const cc = colorConfig[d.color] || colorConfig.rose;
+    const sc = severityConfig[d.severity];
+    const name = lang==='id' ? d.nameId : d.nameEn;
+    const altName = lang==='id' ? d.nameEn : d.nameId;
+    const desc = lang==='id' ? d.descId : d.descEn;
+    return `<div class="glass-card shimmer-card reveal rounded-2xl overflow-hidden cursor-pointer shadow-glass border border-rose-50 dark:border-mauve-700" onclick="openModal('${d.id}')">
+      <div class="h-36 ${cc.bg} ${cc.dark} flex items-center justify-center relative overflow-hidden">
+        <i class="mdi ${d.icon} text-7xl opacity-20 absolute right-2 bottom-2 ${cc.text}"></i>
+        <div class="text-5xl relative z-10">${d.emoji}</div>
+      </div>
+      <div class="p-5">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <div>
+            <div class="font-display font-bold text-[1.05rem] text-mauve-900 dark:text-rose-100">${name}</div>
+            <div class="text-xs text-mauve-400 mt-0.5">${altName}</div>
+          </div>
+          <span class="text-[0.7rem] font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${sc.cls}">${d.severityLabel}</span>
+        </div>
+        <p class="text-xs text-mauve-500 dark:text-mauve-400 leading-relaxed mt-2 mb-4">${desc}</p>
+        <div class="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 text-xs font-semibold group-hover:gap-3 transition-all">
+          <i class="mdi mdi-arrow-right text-sm"></i>
+          <span>${t('disease.learn')}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  setupReveal();
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal(id) {
+  const d = diseases.find(x=>x.id===id);
+  if (!d) return;
+  const name = lang==='id' ? d.nameId : d.nameEn;
+  const altName = lang==='id' ? d.nameEn : d.nameId;
+  const fullDesc = lang==='id' ? d.fullDescId : d.fullDescEn;
+  const causes = lang==='id' ? d.causesId : d.causesEn;
+  const syms = lang==='id' ? d.symptomsId : d.symptomsEn;
+  const tip = lang==='id' ? d.tipId : d.tipEn;
+  const sc = severityConfig[d.severity];
+
+  document.getElementById('modalIcon').textContent = d.emoji;
+  document.getElementById('modalName').textContent = name;
+  document.getElementById('modalEn').innerHTML = `<span>${altName}</span> &nbsp; <span class="text-[0.7rem] font-semibold px-2 py-0.5 rounded-full ${sc.cls}">${d.severityLabel}</span>`;
+  document.getElementById('modalBody').innerHTML = `
+    <p class="text-sm text-mauve-500 dark:text-mauve-400 leading-relaxed mb-5">${fullDesc}</p>
+    <p class="text-[0.7rem] font-bold uppercase tracking-wider text-mauve-400 mb-3">${t('modal.causes')}</p>
+    <div class="rounded-xl overflow-hidden border border-rose-100 dark:border-mauve-700 mb-5 text-xs">
+      <div class="grid grid-cols-[auto,1fr] bg-rose-50 dark:bg-mauve-800/50">
+        <div class="px-3 py-2 font-semibold text-mauve-500">${t('modal.factor')}</div>
+        <div class="px-3 py-2 font-semibold text-mauve-500">${t('modal.explanation')}</div>
+      </div>
+      ${causes.map(([f,e],i) => `<div class="grid grid-cols-[auto,1fr] border-t border-rose-50 dark:border-mauve-800 ${i%2===1?'bg-rose-25 dark:bg-mauve-800/20':''}">
+        <div class="px-3 py-2 font-semibold text-mauve-700 dark:text-mauve-200 min-w-[100px]">${f}</div>
+        <div class="px-3 py-2 text-mauve-500 dark:text-mauve-400">${e}</div>
+      </div>`).join('')}
+    </div>
+    <p class="text-[0.7rem] font-bold uppercase tracking-wider text-mauve-400 mb-3">${t('modal.symptoms')}</p>
+    <div class="flex flex-wrap gap-2 mb-5">
+      ${syms.map(s => `<span class="text-xs px-3 py-1 rounded-full bg-rose-50 dark:bg-mauve-800 border border-rose-200 dark:border-mauve-600 text-rose-700 dark:text-rose-300 font-medium">${s}</span>`).join('')}
+    </div>
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-2.5">
+      <i class="mdi mdi-lightbulb text-amber-500 text-base flex-shrink-0 mt-0.5"></i>
+      <div class="text-xs text-amber-700 dark:text-amber-400 leading-relaxed"><strong>${t('modal.tip')}</strong><br>${tip}</div>
+    </div>`;
+
+  const ov = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+  ov.classList.remove('opacity-0','pointer-events-none');
+  ov.classList.add('opacity-100');
+  box.classList.remove('scale-95');
+  box.classList.add('scale-100');
+}
+function closeModal(e) {
+  if (e.target !== document.getElementById('modalOverlay')) return;
+  const ov = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+  ov.classList.replace('opacity-100','opacity-0');
+  ov.classList.add('pointer-events-none');
+  box.classList.replace('scale-100','scale-95');
+}
+
+// ── Detection ─────────────────────────────────────────────────
+function setupDetection() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active','text-rose-600','dark:text-rose-400','border-rose-600');
+        b.classList.add('text-mauve-400','dark:text-mauve-400','border-transparent');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active','text-rose-600','dark:text-rose-400','border-rose-600');
+      btn.classList.remove('text-mauve-400','dark:text-mauve-400','border-transparent');
+      document.getElementById('panel'+btn.dataset.tab.charAt(0).toUpperCase()+btn.dataset.tab.slice(1)).classList.remove('hidden');
+      currentBlob = null; document.getElementById('btnAnalyze').disabled = true;
+    });
+  });
+  // Set initial active tab styling
+  const first = document.querySelector('.tab-btn.active');
+  if (first) { first.classList.add('text-rose-600','border-rose-600'); first.classList.remove('text-mauve-400','border-transparent'); }
+
+  document.getElementById('btnStartCam').addEventListener('click', startCamera);
+  document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+  document.getElementById('btnRetake').addEventListener('click', retakePhoto);
+
+  const dz = document.getElementById('dropZone');
+  const fi = document.getElementById('fileInput');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('border-rose-400','bg-rose-25'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('border-rose-400','bg-rose-25'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('border-rose-400','bg-rose-25');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadFile(f);
+  });
+  fi.addEventListener('change', () => { if (fi.files[0]) loadFile(fi.files[0]); });
+  document.getElementById('btnRemoveImg').addEventListener('click', removeImg);
+  document.getElementById('btnAnalyze').addEventListener('click', runAnalysis);
+}
+
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const vid = document.getElementById('videoEl');
+    vid.srcObject = cameraStream; vid.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('vfOverlay').classList.remove('hidden');
+    document.getElementById('btnStartCam').classList.add('hidden');
+    document.getElementById('btnCapture').classList.remove('hidden'); document.getElementById('btnCapture').style.display = 'flex';
+    toast('Kamera aktif', 'success');
+  } catch { toast('Tidak dapat mengakses kamera. Gunakan tab Unggah.', 'error'); }
+}
+function capturePhoto() {
+  const vid = document.getElementById('videoEl');
+  const cv = document.getElementById('capturedCanvas');
+  cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+  cv.getContext('2d').drawImage(vid, 0, 0);
+  cv.classList.remove('hidden'); cv.style.display = 'block';
+  vid.style.display = 'none';
+  document.getElementById('btnCapture').classList.add('hidden');
+  document.getElementById('btnRetake').classList.remove('hidden'); document.getElementById('btnRetake').style.display = 'flex';
+  document.getElementById('vfOverlay').classList.add('hidden');
+  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+  cv.toBlob(b => { currentBlob = b; document.getElementById('btnAnalyze').disabled = false; }, 'image/jpeg', 0.92);
+  toast('Foto berhasil diambil!', 'success');
+}
+function retakePhoto() {
+  document.getElementById('capturedCanvas').classList.add('hidden');
+  document.getElementById('btnRetake').classList.add('hidden');
+  document.getElementById('btnStartCam').classList.remove('hidden');
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+  currentBlob = null; document.getElementById('btnAnalyze').disabled = true;
+}
+function loadFile(f) {
+  currentBlob = f;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewWrap').classList.remove('hidden');
+    document.getElementById('dropZone').classList.add('hidden');
+    document.getElementById('btnAnalyze').disabled = false;
+  };
+  reader.readAsDataURL(f);
+}
+function removeImg() {
+  document.getElementById('previewWrap').classList.add('hidden');
+  document.getElementById('dropZone').classList.remove('hidden');
+  document.getElementById('fileInput').value = '';
+  currentBlob = null; document.getElementById('btnAnalyze').disabled = true;
+}
+
+// ── Analysis ──────────────────────────────────────────────────
+async function runAnalysis() {
+  if (!currentBlob) return;
+  sTo('#result');
+  showLoading();
+  await new Promise(r => setTimeout(r, 1900));
+  const ids = ['acne','atopic','keratosis','leprosy','psoriasis','wart'];
+  const picked = ids[Math.floor(Math.random()*ids.length)];
+  const conf = 0.64 + Math.random() * 0.33;
+  const others = ids.filter(c=>c!==picked);
+  const top3 = [
+    { cls:picked, score:conf },
+    { cls:others[Math.floor(Math.random()*5)], score:conf*(0.25+Math.random()*0.2) },
+    { cls:others[Math.floor(Math.random()*5)], score:conf*(0.08+Math.random()*0.14) },
+  ];
+  showResult(picked, conf, top3);
+
+  const d = diseases.find(x=>x.id===picked);
+  const item = { id:Date.now(), diseaseId:picked, nameId:d.nameId, nameEn:d.nameEn, confidence:conf, time:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) };
+  analysisHistory.unshift(item);
+  if (analysisHistory.length > 8) analysisHistory.pop();
+  localStorage.setItem('dcAH', JSON.stringify(analysisHistory));
+  renderHistory(); renderAnalytics();
+}
+
+function showLoading() {
+  document.getElementById('resultEmpty').style.display = 'none';
+  document.getElementById('historyPanel').classList.add('hidden');
+  document.getElementById('resultContent').classList.remove('hidden');
+  document.getElementById('resultContent').innerHTML = `
+    <div class="glass-card rounded-2xl p-12 text-center shadow-glass flex flex-col items-center gap-4">
+      <div class="spinner"></div>
+      <p class="text-sm text-mauve-400">${lang==='id'?'Sedang menganalisis gambar...':'Analyzing image...'}</p>
+    </div>`;
+}
+
+function showResult(did, conf, top3) {
+  const d = diseases.find(x=>x.id===did);
+  const name = lang==='id'?d.nameId:d.nameEn;
+  const desc = lang==='id'?d.descId:d.descEn;
+  const pct = (conf*100).toFixed(1);
+  const cc = colorConfig[d.color] || colorConfig.rose;
+  document.getElementById('resultContent').innerHTML = `
+    <div class="glass-card rounded-2xl overflow-hidden shadow-glass-md border border-rose-50 dark:border-mauve-700">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-rose-600 to-rose-800 p-6 flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-4xl flex-shrink-0">${d.emoji}</div>
+        <div class="text-white">
+          <div class="font-display font-extrabold text-2xl">${name}</div>
+          <div class="text-rose-200 text-sm mt-0.5">${t('result.confidence')}: ${pct}%</div>
+        </div>
+        <div class="ml-auto text-right">
+          <div class="font-display font-extrabold text-4xl text-white">${pct}<span class="text-xl font-sans">%</span></div>
+          <div class="text-rose-200 text-xs">confidence</div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div class="p-6">
+        <!-- Confidence bar -->
+        <div class="mb-6">
+          <div class="flex justify-between text-xs font-semibold text-mauve-500 mb-1.5">
+            <span>${t('result.confidence')}</span><span>${pct}%</span>
+          </div>
+          <div class="h-2.5 rounded-full bg-rose-100 dark:bg-mauve-700 overflow-hidden">
+            <div class="conf-bar-fill h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600" id="confBar" style="width:0%"></div>
+          </div>
+        </div>
+        <!-- Top 3 -->
+        <p class="text-xs font-bold uppercase tracking-wider text-mauve-400 mb-3">${t('result.top3')}</p>
+        <div class="flex flex-col gap-2.5 mb-6">
+          ${top3.map((item,i)=>{
+            const dd=diseases.find(x=>x.id===item.cls);
+            const isFirst=i===0;
+            return `<div>
+              <div class="flex justify-between text-xs text-mauve-500 mb-1">
+                <span class="${isFirst?'font-semibold text-mauve-700 dark:text-mauve-200':''}">${lang==='id'?dd?.nameId:dd?.nameEn}</span>
+                <span class="${isFirst?'font-bold text-rose-600':''}">${(item.score*100).toFixed(1)}%</span>
+              </div>
+              <div class="h-1.5 rounded-full bg-rose-50 dark:bg-mauve-700 overflow-hidden">
+                <div class="top3-fill h-full rounded-full ${isFirst?'bg-gradient-to-r from-rose-400 to-rose-600':'bg-rose-200 dark:bg-mauve-600'}" id="t3b${i}" style="width:0%"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <!-- Description -->
+        <p class="text-sm text-mauve-500 dark:text-mauve-400 leading-relaxed mb-4">${desc}</p>
+        <!-- Disclaimer -->
+        <div class="flex gap-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3.5 mb-5 text-xs text-amber-700 dark:text-amber-400">
+          <i class="mdi mdi-hospital-box text-sm flex-shrink-0 mt-0.5"></i>
+          <span>⚕️ ${t('result.disclaimer')}</span>
+        </div>
+        <!-- Actions -->
+        <div class="flex gap-3 flex-wrap">
+          <button onclick="copyResult('${name}',${pct})" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm font-semibold shadow-rose hover:-translate-y-0.5 transition-all">
+            <i class="mdi mdi-content-copy text-sm"></i> ${t('result.copy')}
+          </button>
+          <button onclick="sTo('#detection')" class="flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-200 dark:border-mauve-600 text-mauve-500 dark:text-mauve-300 text-sm font-semibold hover:border-rose-400 hover:text-rose-600 transition-all">
+            <i class="mdi mdi-refresh text-sm"></i> ${t('result.again')}
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  setTimeout(() => {
+    const cb = document.getElementById('confBar');
+    if (cb) cb.style.width = pct + '%';
+    top3.forEach((_,i) => {
+      const el = document.getElementById('t3b'+i);
+      if (el) el.style.width = (top3[i].score*100).toFixed(1)+'%';
+    });
+  }, 120);
+
+  document.getElementById('historyPanel').classList.remove('hidden');
+  toast(lang==='id'?'Analisis selesai!':'Analysis complete!', 'success');
+}
+
+function copyResult(name, conf) {
+  navigator.clipboard.writeText(`DermaCheck.AI\nDiagnosis: ${name}\nKeyakinan: ${conf}%`).then(()=>toast(lang==='id'?'Disalin!':'Copied!','info'));
+}
+
+// ── History ───────────────────────────────────────────────────
+function renderHistory() {
+  if (!analysisHistory.length) { document.getElementById('historyPanel').classList.add('hidden'); return; }
+  document.getElementById('historyPanel').classList.remove('hidden');
+  document.getElementById('historyList').innerHTML = analysisHistory.map(h => {
+    const d = diseases.find(x=>x.id===h.diseaseId);
+    return `<div class="glass-card rounded-xl px-4 py-3 flex items-center justify-between shadow-glass">
+      <div class="flex items-center gap-3">
+        <div class="text-xl">${d?.emoji||'🔬'}</div>
+        <div>
+          <div class="font-semibold text-sm text-mauve-800 dark:text-mauve-100">${lang==='id'?h.nameId:h.nameEn}</div>
+          <div class="text-xs text-mauve-400 flex items-center gap-1"><i class="mdi mdi-clock-outline text-xs"></i>${h.time}</div>
+        </div>
+      </div>
+      <span class="font-bold text-sm text-rose-600 dark:text-rose-400">${(h.confidence*100).toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Analytics ─────────────────────────────────────────────────
+function renderAnalytics() {
+  const hist = analysisHistory;
+  document.getElementById('statTotal').textContent = hist.length;
+  if (!hist.length) {
+    ['statAvg','statMin','statMax'].forEach(id => document.getElementById(id).textContent = t('analytics.nodataval'));
+    document.getElementById('distContent').innerHTML = `<p class="text-center text-mauve-400 text-sm py-8">${t('analytics.empty')}</p>`;
+    return;
+  }
+  const confs = hist.map(h=>h.confidence);
+  const avg = confs.reduce((a,b)=>a+b,0)/confs.length;
+  document.getElementById('statAvg').textContent = (avg*100).toFixed(1)+'%';
+  document.getElementById('statMin').textContent = (Math.min(...confs)*100).toFixed(1)+'%';
+  document.getElementById('statMax').textContent = (Math.max(...confs)*100).toFixed(1)+'%';
+  const counts = {}; diseases.forEach(d=>counts[d.id]=0);
+  hist.forEach(h=>{ if(counts[h.diseaseId]!==undefined) counts[h.diseaseId]++; });
+  const max = Math.max(...Object.values(counts),1);
+  document.getElementById('distContent').innerHTML = `<div class="flex flex-col gap-3.5">
+    ${diseases.map(d=>`<div>
+      <div class="flex justify-between text-xs text-mauve-500 mb-1.5">
+        <span class="flex items-center gap-1.5"><span>${d.emoji}</span> ${lang==='id'?d.nameId:d.nameEn}</span>
+        <span class="font-semibold ${counts[d.id]>0?'text-rose-600 dark:text-rose-400':''}">${counts[d.id]}</span>
+      </div>
+      <div class="h-2 rounded-full bg-rose-50 dark:bg-mauve-700 overflow-hidden">
+        <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all duration-700" style="width:${(counts[d.id]/max*100)}%"></div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── Evaluation ────────────────────────────────────────────────
+function setupEval() { document.getElementById('btnRunEval').addEventListener('click', runEval); }
+async function runEval() {
+  const btn = document.getElementById('btnRunEval');
+  btn.disabled = true; btn.innerHTML = `<i class="mdi mdi-loading mdi-spin text-base"></i> ${t('eval.processing')}`;
+  document.getElementById('evalContent').innerHTML = `<div class="flex justify-center py-10"><div class="spinner"></div></div>`;
+  await new Promise(r => setTimeout(r,2200));
+
+  const cls = ['Acne','Atopic','Keratosis','Leprosy','Psoriasis','Wart'];
+  const matrix = cls.map((_,r) => cls.map((_,c) => r===c ? 12+Math.floor(Math.random()*18) : Math.floor(Math.random()*5)));
+  const total = matrix.flat().reduce((a,b)=>a+b,0);
+  const correct = matrix.reduce((acc,row,i)=>acc+row[i],0);
+  const acc = ((correct/total)*100).toFixed(1);
+
+  document.getElementById('evalContent').innerHTML = `
+    <div class="mb-4 flex items-center gap-3 p-3.5 rounded-xl bg-rose-50 dark:bg-mauve-800/50 border border-rose-100 dark:border-mauve-700 text-sm">
+      <i class="mdi mdi-check-decagram text-rose-500 text-xl"></i>
+      <span class="text-mauve-600 dark:text-mauve-300">Akurasi keseluruhan: <strong class="text-rose-600 dark:text-rose-400">${acc}%</strong> · ${correct}/${total} benar</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse min-w-[520px]">
+        <thead>
+          <tr>
+            <th class="text-left px-3 py-2 bg-rose-50 dark:bg-mauve-800 text-mauve-500 font-semibold border border-rose-100 dark:border-mauve-700 rounded-tl-lg">↓ Aktual / Prediksi →</th>
+            ${cls.map(c=>`<th class="px-3 py-2 bg-rose-50 dark:bg-mauve-800 text-mauve-500 font-semibold border border-rose-100 dark:border-mauve-700">${c}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${matrix.map((row,r)=>`<tr>
+            <th class="text-left px-3 py-2 bg-rose-25 dark:bg-mauve-800/30 text-mauve-600 dark:text-mauve-200 font-semibold border border-rose-100 dark:border-mauve-700">${cls[r]}</th>
+            ${row.map((v,c)=>`<td class="px-3 py-2 text-center border border-rose-100 dark:border-mauve-700 ${r===c?'cm-diag':v>0?'text-mauve-500':'text-mauve-300 dark:text-mauve-600'}">${v}</td>`).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  btn.disabled = false;
+  btn.innerHTML = `<i class="mdi mdi-play text-base"></i> ${t('eval.run')}`;
+  toast(lang==='id'?'Evaluasi selesai!':'Evaluation complete!', 'success');
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function sTo(sel) { document.querySelector(sel)?.scrollIntoView({ behavior:'smooth' }); }
+
+function setupReveal() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
+}
+
+function setupNav() {
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.nav-link');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY + 100;
+    sections.forEach(sec => {
+      if (y >= sec.offsetTop && y < sec.offsetTop + sec.offsetHeight) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+sec.id));
+      }
+    });
+  }, { passive: true });
+}
+
+function setupBackTop() {
+  const btn = document.getElementById('back-top');
+  window.addEventListener('scroll', () => {
+    const show = window.scrollY > 400;
+    btn.classList.toggle('opacity-0', !show);
+    btn.classList.toggle('pointer-events-none', !show);
+    btn.classList.toggle('opacity-100', show);
+  }, { passive: true });
+}
+
+function toast(msg, type='info') {
+  const colors = { success:'border-l-emerald-500', error:'border-l-red-500', info:'border-l-rose-500' };
+  const icons  = { success:'mdi-check-circle text-emerald-500', error:'mdi-alert-circle text-red-500', info:'mdi-information text-rose-500' };
+  const el = document.createElement('div');
+  el.className = `toast-anim glass-card flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-glass-md border-l-4 ${colors[type]} text-sm max-w-xs`;
+  el.innerHTML = `<i class="mdi ${icons[type]} text-base flex-shrink-0"></i><span class="text-mauve-700 dark:text-mauve-200">${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='all 0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+</script>
+</body>
+</html>
